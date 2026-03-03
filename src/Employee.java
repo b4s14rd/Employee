@@ -10,7 +10,7 @@ public class Employee implements Serializable {
     private int id;
     private String name;
 
-    private transient String password;
+    private transient String password; //пароль не будет сериализован
     private String position;
 
     public Employee(int id, String name, String password, String position) {
@@ -29,7 +29,19 @@ public class Employee implements Serializable {
         return this;
     }
 
+    public static void saveToFile(String filename, Employee emp) throws IOException {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
+            oos.writeObject(emp);
+        }
+    }
+
+    public static Employee loadFromFile(String filename) throws IOException, ClassNotFoundException {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename))) {
+            return (Employee) ois.readObject();
+        }
+    }
+
     public int getId() { return id; } //геттеры для тестов
     public String getPassword() { return password; }
-    public static void clearRegistry() { employeesRegistry.clear(); } //от implements Serializable вызывается автоматически
+    public static void clearRegistry() { employeesRegistry.clear(); }
 }

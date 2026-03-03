@@ -3,22 +3,24 @@ import java.io.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class EmployeeTest {
+    private final String FILE_NAME = "employee_test.dat";
 
     @BeforeEach
     void setUp() {
         Employee.clearRegistry(); //чистим статик перед каждым тестом
     }
 
+    @AfterEach
+    void tearDown() {
+        new File(FILE_NAME).delete(); //удаляем файл после теста
+    }
+
     @Test
     void testPasswordIsNotSerialized() throws Exception {
         Employee emp = new Employee(1, "Alice", "secret123", "Dev");
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos); //последовательность
-        oos.writeObject(emp);
-
-        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray())); //поток всех байтов
-        Employee deserialized = (Employee) ois.readObject(); //восстанавливаем объект
+        Employee.saveToFile(FILE_NAME, emp);
+        Employee deserialized = Employee.loadFromFile(FILE_NAME);
 
         assertNull(deserialized.getPassword(), "Пароль не должен был сохраниться"); //пароль дб null
     }
@@ -27,11 +29,8 @@ class EmployeeTest {
     void testNoDuplicateIds() throws Exception {
         Employee original = new Employee(1, "Alice", "pass", "Dev"); //создаем сотрудника
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(); //загрузка того же id
-        new ObjectOutputStream(baos).writeObject(original); //превращаем original в набор байтов и сохраняем
-
-        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray())); //берем те же байты которые только что сохранили
-        Employee result = (Employee) ois.readObject(); //восстанавливаем объект
+        Employee.saveToFile(FILE_NAME, original);
+        Employee result = Employee.loadFromFile(FILE_NAME); //загружаем обратно
 
         assertSame(original, result, "Должен вернуться существующий объект из реестра"); //ссылка на объект совпадает
     }
